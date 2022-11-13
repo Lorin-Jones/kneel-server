@@ -1,6 +1,6 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from views.metal_requests import get_all_metals, get_single_metal, create_metal
+from views.metal_requests import get_all_metals, get_single_metal, create_metal, update_metal
 from views.order_requests import delete_order, get_all_orders, get_single_order, create_order, update_order
 from views.size_requests import get_all_sizes, get_single_size, create_size
 from views.style_requests import get_all_styles, get_single_style, create_style
@@ -124,7 +124,6 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode())
     # A method that handles any PUT request.
     def do_PUT(self):
-        self._set_headers(204)
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
@@ -132,11 +131,17 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
-        # Delete a single animal from the list
-        if resource == "orders":
-            update_order(id, post_body)
+        success = False
 
-        # Encode the new animal and send in response
+        if resource == "metals":
+            success = update_metal(id, post_body)
+        # rest of the elif's
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
         self.wfile.write("".encode())
 
     def _set_headers(self, status):
